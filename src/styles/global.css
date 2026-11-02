@@ -468,3 +468,131 @@
     font-size: 20px;
   }
 }
+.analyze-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
+}
+
+.analysis-error {
+  margin: 20px auto 0;
+  color: #ff9b9b;
+  text-align: center;
+  font-size: 14px;
+}
+
+.results-panel {
+  margin-top: 35px;
+  padding: 30px;
+  border: 1px solid #302b4d;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #171827, #11141d);
+}
+
+.results-panel h2 {
+  margin: 10px 0 25px;
+  font-family: "Manrope", sans-serif;
+  font-size: 24px;
+}
+
+.score-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 25px;
+  border: 1px solid #383153;
+  border-radius: 13px;
+  background: #1c1930;
+}
+
+.score-number {
+  color: #b2a3ff;
+  font-family: "Manrope", sans-serif;
+  font-size: 48px;
+  font-weight: 800;
+}
+
+.score-caption {
+  color: #a6abc0;
+  font-size: 13px;
+}
+
+.result-summary {
+  color: #9da4b8;
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.result-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-top: 28px;
+}
+
+.result-columns h3 {
+  margin: 0 0 14px;
+  font-size: 15px;
+}
+
+.keyword-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.keyword {
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.keyword.matched {
+  border: 1px solid #285442;
+  background: #14291f;
+  color: #8de0b6;
+}
+
+.keyword.missing {
+  border: 1px solid #59413c;
+  background: #2b1c1a;
+  color: #ffb09f;
+}
+
+.result-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid #2b2f40;
+}
+
+.result-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.result-stats strong {
+  color: #c2b8ff;
+  font-size: 22px;
+}
+
+.result-stats span {
+  color: #8f97ad;
+  font-size: 12px;
+}
+
+@media (max-width: 600px) {
+  .result-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .results-panel {
+    padding: 20px;
+  }
+}
