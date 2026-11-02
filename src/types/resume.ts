@@ -4,4 +4,8 @@ export interface ResumeAnalysis {
   missingKeywords: string[];
   resumeWordCount: number;
   jobWordCount: number;
+
+  jobTitle: string;
+  limitedData: boolean;
+  roleSuggestions: string[];
 }

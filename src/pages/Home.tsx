@@ -6,6 +6,7 @@ import {
   analyzeResume,
   extractResumeText,
 } from "../services/resumeAnalyzer";
+import type { ResumeAnalysis } from "../types/resume";
 type AIResumeReview = {
   summary: string;
   strengths: string[];
@@ -64,7 +65,8 @@ function Home() {
         );
       }
 
-      const result = analyzeResume(resumeText, jobDescription);
+      const result = analyzeResume(resumeText, jobDescription, jobTitle);
+      
       setAnalysis(result);
     } catch (caughtError) {
       setError(
@@ -77,41 +79,7 @@ function Home() {
     }
   }
 
-  async function handleLoadAIModel() {
-    setAIError("");
-
-    if (!isWebGPUAvailable()) {
-      setAIError(
-        "WebGPU isn't available in this browser. Try a recent version of Chrome or Edge.",
-      );
-      return;
-    }
-
-    setModelLoading(true);
-    setModelStatus("Preparing the AI model...");
-    setModelProgress(0);
-
-    try {
-      await loadAIModel((progress) => {
-        setModelStatus(progress.text);
-        setModelProgress(Math.round(progress.progress * 100));
-      });
-
-      setModelReady(true);
-      setModelStatus("AI model is ready.");
-      setModelProgress(100);
-    } catch (caughtError) {
-      setAIError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "The AI model could not be loaded.",
-      );
-    } finally {
-      setModelLoading(false);
-    }
-  }
-
- async function handleAIReview() {
+  async function handleAIReview() {
   setAIError("");
   setAIReview(null);
 
@@ -259,6 +227,31 @@ function Home() {
                 of {analysis.jobWordCount} unique job-description words.
                 This is a keyword comparison—not a guaranteed ATS score.
               </p>
+
+              {analysis.limitedData && (
+                <p className="result-summary">
+                  This is a limited-data estimate because the job description is
+                  short. You can still use the results, but they may not
+                  represent all job requirements.
+                </p>
+              )}
+
+              {analysis.roleSuggestions?.length > 0 && (
+                <div className="role-suggestions">
+                  <h3>Potentially relevant skills for {analysis.jobTitle}</h3>
+                  <p>
+                    These are role-based suggestions, not confirmed requirements
+                    from the job description.
+                  </p>
+                  <div className="keyword-list">
+                    {analysis.roleSuggestions.map((skill) => (
+                      <span className="keyword" key={skill}>
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="result-columns">
                 <div>
