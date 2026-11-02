@@ -6,13 +6,18 @@ import {
   analyzeResume,
   extractResumeText,
 } from "../services/resumeAnalyzer";
-import {
-  isWebGPUAvailable,
-  loadAIModel,
-  reviewResumeWithAI,
-} from "../services/aiResumeReviewer";
-import type { AIResumeReview } from "../services/aiResumeReviewer";
-import type { ResumeAnalysis } from "../types/resume";
+type AIResumeReview = {
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  missingSkills: string[];
+  recommendations: string[];
+  improvedBullets: {
+    original: string;
+    suggested: string;
+    explanation: string;
+  }[];
+};
 
 function Home() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -24,11 +29,7 @@ function Home() {
 
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAILoading] = useState(false);
-  const [modelLoading, setModelLoading] = useState(false);
-  const [modelReady, setModelReady] = useState(false);
-
-  const [modelProgress, setModelProgress] = useState(0);
-  const [modelStatus, setModelStatus] = useState("");
+  
   const [error, setError] = useState("");
   const [aiError, setAIError] = useState("");
 
@@ -110,50 +111,66 @@ function Home() {
     }
   }
 
-  async function handleAIReview() {
-    setAIError("");
-    setAIReview(null);
+ async function handleAIReview() {
+  setAIError("");
+  setAIReview(null);
 
-    if (!resumeFile) {
-      setAIError("Please upload your resume first.");
-      return;
-    }
-
-    if (!jobDescription.trim()) {
-      setAIError("Please enter the target job description.");
-      return;
-    }
-
-    setAILoading(true);
-
-    try {
-      const resumeText = await extractResumeText(resumeFile);
-
-      if (!resumeText.trim()) {
-        throw new Error("We couldn't extract readable text from this resume.");
-      }
-
-      const result = await reviewResumeWithAI(
-        resumeText,
-        jobDescription,
-        (progress) => {
-          setModelStatus(progress.text);
-          setModelProgress(Math.round(progress.progress * 100));
-        },
-      );
-
-      setAIReview(result);
-    } catch (caughtError) {
-      setAIError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "The AI review failed. Please try again.",
-      );
-    } finally {
-      setAILoading(false);
-    }
+  if (!resumeFile) {
+    setAIError("Please upload your resume first.");
+    return;
   }
 
+  if (!jobDescription.trim()) {
+    setAIError("Please enter the target job description.");
+    return;
+  }
+
+  setAILoading(true);
+
+  try {
+    const resumeText = await extractResumeText(resumeFile);
+
+    if (!resumeText.trim()) {
+      throw new Error("We couldn't extract readable text from this resume.");
+    }
+
+    const response = await fetch("http://localhost:3001/api/review", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        resumeText,
+        jobDescription,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "The AI review failed.");
+    }
+
+    const result: AIResumeReview = {
+      summary: data.summary ?? "Review completed.",
+      strengths: data.strengths ?? [],
+      weaknesses: data.improvements ?? [],
+      missingSkills: data.missingKeywords ?? [],
+      recommendations: data.improvements ?? [],
+      improvedBullets: [],
+    };
+
+    setAIReview(result);
+  } catch (caughtError) {
+    setAIError(
+      caughtError instanceof Error
+        ? caughtError.message
+        : "The AI review failed. Please try again.",
+    );
+  } finally {
+    setAILoading(false);
+  }
+}
   return (
     <div className="app-shell">
       <Navbar />
@@ -297,47 +314,20 @@ function Home() {
               resume, strengths, weaknesses, and improvements.
             </p>
 
-            {!modelReady && (
-              <button
-                className="analyze-button ai-button"
-                type="button"
-                onClick={handleLoadAIModel}
-                disabled={modelLoading}
-              >
-                {modelLoading ? "Loading AI model..." : "Load AI Model"}
-              </button>
-            )}
+           <p className="ai-description">
+  Get contextual feedback about your resume, strengths, weaknesses,
+  and improvements using Gemini AI.
+</p>
 
-            {modelLoading && (
-              <div className="model-progress">
-                <div className="progress-track">
-                  <div
-                    className="progress-fill"
-                    style={{ width: `${modelProgress}%` }}
-                  />
-                </div>
-
-                <p>{modelProgress}% — {modelStatus}</p>
-              </div>
-            )}
-
-            {modelReady && (
-              <>
-                <p className="model-ready">
-                  <span className="status-dot" />
-                  AI model is ready
-                </p>
-
-                <button
-                  className="analyze-button ai-button"
-                  type="button"
-                  onClick={handleAIReview}
-                  disabled={aiLoading}
-                >
-                  {aiLoading ? "AI is reviewing your resume..." : "Review with AI"}
-                </button>
-              </>
-            )}
+<button
+  className="analyze-button ai-button"
+  type="button"
+  onClick={handleAIReview}
+  disabled={aiLoading}
+>
+  {aiLoading ? "AI is reviewing your resume..." : "Review with AI"}
+</button>
+                
 
             {aiError && <p className="analysis-error">{aiError}</p>}
 
